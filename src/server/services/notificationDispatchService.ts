@@ -4,8 +4,12 @@ import type {
   NotificationProviderWithParsedConfig,
   WebhookProviderConfig
 } from '$lib/domain/notification-provider';
+import { serverEnv } from '$lib/config/env.server';
 import type { Notification } from '$lib/domain/notification';
 import logger from '$server/config/logger';
+import { db } from '$server/db';
+import * as schema from '$server/db/schema';
+import { inArray } from 'drizzle-orm';
 
 import {
   generateHtmlDigest,
@@ -14,11 +18,18 @@ import {
 } from './emailTemplateService';
 import { sendEmail } from './emailNotificationService';
 import { buildWebhookHeaders } from './notification-provider-http.helper';
+import {
+  sendDiscordNotification,
+  parseNotificationColors,
+  type NotificationColors
+} from './discordNotificationService';
+import { toDispatchNotifications, type DispatchNotification } from './notification-payload.helper';
 import { getEnabledProvidersForChannels } from './notificationProviderService';
 import {
   getActiveNotificationsForChannels,
   getPendingNotificationsForChannels
 } from './notificationService';
+import { getAppConfigByKey } from './configService';
 
 type DispatchResult = {
   providerId: string;
@@ -31,7 +42,7 @@ type DispatchResult = {
 
 async function sendWebhookNotification(
   provider: NotificationProviderWithParsedConfig,
-  notifications: Notification[]
+  notifications: DispatchNotification[]
 ): Promise<DispatchResult> {
   const config = provider.config as WebhookProviderConfig;
 
@@ -40,9 +51,8 @@ async function sendWebhookNotification(
       method: config.method,
       headers: buildWebhookHeaders(config),
       body: JSON.stringify({
-        title: 'Tracktor notifications',
+        title: 'Tracktor Notifications',
         notificationCount: notifications.length,
-        channels: provider.channels,
         notifications,
         timestamp: new Date().toISOString()
       })
@@ -130,9 +140,28 @@ async function sendGotifyNotification(
   }
 }
 
+async function loadNotificationColors(): Promise<Partial<NotificationColors>> {
+  try {
+    const [reminder, alert, information] = await Promise.all([
+      getAppConfigByKey('colorReminder'),
+      getAppConfigByKey('colorAlert'),
+      getAppConfigByKey('colorInformation')
+    ]);
+    return parseNotificationColors(
+      reminder.data?.value,
+      alert.data?.value,
+      information.data?.value
+    );
+  } catch {
+    return {};
+  }
+}
+
 async function sendNotificationsToProvider(
   provider: NotificationProviderWithParsedConfig,
-  notifications: Notification[]
+  notifications: Notification[],
+  dispatchNotifications: DispatchNotification[],
+  colors: Partial<NotificationColors>
 ): Promise<DispatchResult> {
   if (notifications.length === 0) {
     return {
@@ -164,11 +193,20 @@ async function sendNotificationsToProvider(
   }
 
   if (provider.type === 'webhook') {
-    return sendWebhookNotification(provider, notifications);
+    return sendWebhookNotification(provider, dispatchNotifications);
   }
 
   if (provider.type === 'gotify') {
     return sendGotifyNotification(provider, notifications);
+  }
+
+  if (provider.type === 'discord') {
+    return sendDiscordNotification(
+      provider,
+      dispatchNotifications,
+      serverEnv.DISCORD_WEBHOOK_URL,
+      colors
+    );
   }
 
   return {
@@ -208,13 +246,28 @@ async function dispatchNotifications(useAllNotifications: boolean): Promise<{
     : await getPendingNotificationsForChannels(channels);
   const allNotifications = (notificationResult.data ?? []) as Notification[];
 
+  const [allDispatchNotifications, colors] = await Promise.all([
+    toDispatchNotifications(allNotifications),
+    loadNotificationColors()
+  ]);
+
+  const providerNotificationMap = new Map<string, Notification[]>();
   const results = await Promise.all(
     providers.map((provider) => {
-      const providerNotifications = allNotifications.filter((notification) =>
-        provider.channels.includes(notification.channel)
+      const providerNotifications = allNotifications.filter((n) =>
+        provider.channels.includes(n.channel)
       );
+      const providerDispatchNotifications = allDispatchNotifications.filter((n) =>
+        provider.channels.includes(n.channel as NotificationChannel)
+      );
+      providerNotificationMap.set(provider.id, providerNotifications);
 
-      return sendNotificationsToProvider(provider, providerNotifications);
+      return sendNotificationsToProvider(
+        provider,
+        providerNotifications,
+        providerDispatchNotifications,
+        colors
+      );
     })
   );
 
@@ -225,6 +278,22 @@ async function dispatchNotifications(useAllNotifications: boolean): Promise<{
       logger.error('Notification dispatch failed', result);
     }
   });
+
+  const sentIds = new Set<string>();
+  for (const result of results) {
+    if (result.success) {
+      for (const n of providerNotificationMap.get(result.providerId) ?? []) {
+        sentIds.add(n.id);
+      }
+    }
+  }
+
+  if (sentIds.size > 0) {
+    await db
+      .update(schema.notificationTable)
+      .set({ sentAt: new Date().toISOString() })
+      .where(inArray(schema.notificationTable.id, Array.from(sentIds)));
+  }
 
   return {
     success: results.every((result) => result.success),

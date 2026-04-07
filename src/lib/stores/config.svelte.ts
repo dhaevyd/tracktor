@@ -22,7 +22,16 @@ const DEFAULT_CONFIGS: Configs = {
   featureInsurance: true,
   featureOverview: true,
   notificationProcessingEnabled: true,
-  notificationProcessingSchedule: '0 9 * * *'
+  notificationProcessingSchedule: '0 9 * * *',
+  labelFuelTab: '',
+  labelMaintenanceTab: '',
+  labelInsuranceTab: '',
+  labelPollutionTab: '',
+  labelReminderTab: '',
+  labelOverviewTab: '',
+  colorReminder: '#3498db',
+  colorAlert: '#e74c3c',
+  colorInformation: '#2ecc71'
 };
 
 /**

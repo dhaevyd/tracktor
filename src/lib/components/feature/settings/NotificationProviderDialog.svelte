@@ -2,6 +2,7 @@
   import Bell from '@lucide/svelte/icons/bell';
   import Loader2 from '@lucide/svelte/icons/loader-2';
   import Mail from '@lucide/svelte/icons/mail';
+  import MessageSquare from '@lucide/svelte/icons/message-square';
   import Webhook from '@lucide/svelte/icons/webhook';
   import Input from '$appui/input.svelte';
   import Button from '$ui/button/button.svelte';
@@ -15,6 +16,7 @@
     NotificationProviderWithParsedConfig,
     WebhookProviderConfig
   } from '$lib/domain/notification-provider';
+  import DiscordProviderForm from './DiscordProviderForm.svelte';
   import EmailProviderForm from './EmailProviderForm.svelte';
   import GotifyProviderForm from './GotifyProviderForm.svelte';
   import NotificationProviderChannels from './NotificationProviderChannels.svelte';
@@ -115,6 +117,9 @@
                 {:else if formType === 'gotify'}
                   <Bell class="h-4 w-4" />
                   Gotify
+                {:else if formType === 'discord'}
+                  <MessageSquare class="h-4 w-4" />
+                  Discord
                 {:else}
                   Select Provider Type
                 {/if}
@@ -137,6 +142,12 @@
                 <span class="flex items-center gap-2">
                   <Bell class="h-4 w-4" />
                   Gotify
+                </span>
+              </Select.Item>
+              <Select.Item value="discord">
+                <span class="flex items-center gap-2">
+                  <MessageSquare class="h-4 w-4" />
+                  Discord
                 </span>
               </Select.Item>
             </Select.Content>
@@ -168,6 +179,8 @@
           isEditing={!!editingProvider}
           onConfigChange={onGotifyConfigChange}
         />
+      {:else if formType === 'discord'}
+        <DiscordProviderForm />
       {/if}
 
       {#if formType}

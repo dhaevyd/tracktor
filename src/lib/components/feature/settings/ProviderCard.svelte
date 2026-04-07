@@ -51,6 +51,8 @@
         return config.url;
       case 'gotify':
         return config.serverUrl;
+      case 'discord':
+        return 'URL configured via environment';
       default:
         return '';
     }

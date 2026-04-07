@@ -106,6 +106,20 @@
       "when": 1773644016419,
       "tag": "20260316065336_add_notification_system",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1775001600000,
+      "tag": "20260407000001_add_reminder_time",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1775002000000,
+      "tag": "20260407000002_sent_at_and_custom_reason",
+      "breakpoints": true
     }
   ]
 }

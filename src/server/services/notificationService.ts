@@ -48,7 +48,12 @@ async function buildReminderNotifications(vehicleId: string): Promise<GeneratedN
         vehicleId,
         type: 'reminder',
         channel: CHANNEL_BY_TYPE.reminder,
-        message: formatReminderMessage(reminder.type, reminder.note, dueDate),
+        message: formatReminderMessage(
+          reminder.type,
+          reminder.note,
+          dueDate,
+          reminder.customReason
+        ),
         source: 'system',
         dueDate: dueDate.toISOString(),
         notificationKey: `reminder:${reminder.id}:${reminder.remindSchedule}`
@@ -169,13 +174,16 @@ export async function syncVehicleNotifications(vehicleId: string): Promise<void>
     });
 
     if (existing) {
+      const contentChanged =
+        existing.message !== notification.message || existing.dueDate !== notification.dueDate;
       await db
         .update(schema.notificationTable)
         .set({
           type: notification.type,
           channel: notification.channel,
           message: notification.message,
-          dueDate: notification.dueDate
+          dueDate: notification.dueDate,
+          ...(contentChanged ? { sentAt: null } : {})
         })
         .where(eq(schema.notificationTable.id, existing.id));
       continue;
@@ -231,7 +239,8 @@ export const getPendingNotificationsForChannels = async (
       and(
         inArray(notification.channel, channels),
         eq(notification.isRead, false),
-        isNull(notification.clearedAt)
+        isNull(notification.clearedAt),
+        isNull(notification.sentAt)
       ),
     orderBy: (notification, { asc }) => [asc(notification.dueDate), asc(notification.created_at)]
   });

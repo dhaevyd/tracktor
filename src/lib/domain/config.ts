@@ -34,4 +34,13 @@ export interface Configs {
   featureOverview?: boolean;
   notificationProcessingEnabled?: boolean;
   notificationProcessingSchedule?: string;
+  labelFuelTab?: string;
+  labelMaintenanceTab?: string;
+  labelInsuranceTab?: string;
+  labelPollutionTab?: string;
+  labelReminderTab?: string;
+  labelOverviewTab?: string;
+  colorReminder?: string;
+  colorAlert?: string;
+  colorInformation?: string;
 }

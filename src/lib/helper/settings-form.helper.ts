@@ -46,7 +46,16 @@ export function createSettingsConfigSchema(
       featureReminders: z.boolean().default(true),
       featureInsurance: z.boolean().default(true),
       featureOverview: z.boolean().default(true),
-      notificationProcessingEnabled: z.boolean().default(true)
+      notificationProcessingEnabled: z.boolean().default(true),
+      labelFuelTab: z.string().optional(),
+      labelMaintenanceTab: z.string().optional(),
+      labelInsuranceTab: z.string().optional(),
+      labelPollutionTab: z.string().optional(),
+      labelReminderTab: z.string().optional(),
+      labelOverviewTab: z.string().optional(),
+      colorReminder: z.string().optional(),
+      colorAlert: z.string().optional(),
+      colorInformation: z.string().optional()
     })
     .refine((obj) => {
       if (obj.mileageUnitFormat !== 'uk-mpg') return true;
@@ -147,7 +156,16 @@ export function createSettingsFieldSectionMap(
     featureReminders: 'features',
     featureInsurance: 'features',
     featureOverview: 'features',
-    notificationProcessingEnabled: 'notifications'
+    notificationProcessingEnabled: 'notifications',
+    colorReminder: 'notifications',
+    colorAlert: 'notifications',
+    colorInformation: 'notifications',
+    labelFuelTab: 'labels',
+    labelMaintenanceTab: 'labels',
+    labelInsuranceTab: 'labels',
+    labelPollutionTab: 'labels',
+    labelReminderTab: 'labels',
+    labelOverviewTab: 'labels'
   };
 
   if (includeNotifications) {

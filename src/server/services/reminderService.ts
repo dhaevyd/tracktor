@@ -11,11 +11,13 @@ import { createSuccessResponse, requireRecord } from './service-response.helper'
 type ReminderPayload = {
   type: Reminder['type'];
   dueDate: string;
+  reminderTime?: string | null;
   remindSchedule: Reminder['remindSchedule'];
   recurrenceType?: Reminder['recurrenceType'];
   recurrenceInterval?: number;
   recurrenceEndDate?: string | null;
   note?: string | null;
+  customReason?: string | null;
   isCompleted?: boolean;
 };
 
@@ -25,11 +27,13 @@ function reminderRecordToPayload(
   return {
     type: reminder.type as Reminder['type'],
     dueDate: reminder.dueDate,
+    reminderTime: reminder.reminderTime,
     remindSchedule: reminder.remindSchedule as Reminder['remindSchedule'],
     recurrenceType: reminder.recurrenceType as Reminder['recurrenceType'],
     recurrenceInterval: reminder.recurrenceInterval,
     recurrenceEndDate: reminder.recurrenceEndDate,
     note: reminder.note,
+    customReason: reminder.customReason,
     isCompleted: reminder.isCompleted
   };
 }
@@ -44,8 +48,15 @@ const sanitizeNote = (note: unknown) => {
 
 const normalizeReminderPayload = (data: ReminderPayload, fallback?: Partial<ReminderPayload>) => {
   const merged = { ...fallback, ...data };
-  const { type, remindSchedule, dueDate, recurrenceType, recurrenceInterval, recurrenceEndDate } =
-    merged;
+  const {
+    type,
+    remindSchedule,
+    dueDate,
+    reminderTime,
+    recurrenceType,
+    recurrenceInterval,
+    recurrenceEndDate
+  } = merged;
   if (!type) {
     throw new AppError('Reminder type is required', Status.BAD_REQUEST);
   }
@@ -69,14 +80,23 @@ const normalizeReminderPayload = (data: ReminderPayload, fallback?: Partial<Remi
     }
   }
 
+  // Validate time if provided
+  const normalizedTime = reminderTime ?? null;
+  if (normalizedTime && !/^\d{2}:\d{2}$/.test(normalizedTime)) {
+    throw new AppError('Invalid reminder time format (expected HH:MM)', Status.BAD_REQUEST);
+  }
+
   return {
     type,
     dueDate: parsedDate.toISOString(),
+    reminderTime: normalizedTime,
     remindSchedule,
     recurrenceType: recurrenceType || 'none',
     recurrenceInterval: recurrenceInterval || 1,
     recurrenceEndDate: parsedRecurrenceEndDate ? parsedRecurrenceEndDate.toISOString() : null,
     note: sanitizeNote(merged.note),
+    customReason:
+      typeof merged.customReason === 'string' ? merged.customReason.trim() || null : null,
     isCompleted: Boolean(merged.isCompleted)
   };
 };

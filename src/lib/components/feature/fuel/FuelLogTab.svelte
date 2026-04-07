@@ -8,10 +8,11 @@
     fuel_import_title,
     fuel_add_title
   } from '$lib/paraglide/messages/_index.js';
+  import { configStore } from '$stores/config.svelte';
 </script>
 
 <FeatureTabShell
-  title={nav_fuel_logs()}
+  title={configStore.configs.labelFuelTab || nav_fuel_logs()}
   listComponent={FuelLogList}
   addSheetTitle={fuel_add_title()}
   addSheetComponent={FuelLogForm}

@@ -20,5 +20,6 @@ export const notificationTable = table('notifications', {
   dueDate: t.text().notNull(),
   isRead: t.integer({ mode: 'boolean' }).notNull().default(false),
   clearedAt: t.text(),
+  sentAt: t.text(),
   ...timestamps
 });

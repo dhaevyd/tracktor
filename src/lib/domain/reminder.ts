@@ -87,11 +87,13 @@ export interface Reminder {
   vehicleId: string;
   type: keyof typeof REMINDER_TYPES;
   dueDate: Date;
+  reminderTime: string | null;
   remindSchedule: keyof typeof REMINDER_SCHEDULES;
   recurrenceType: keyof typeof REMINDER_RECURRENCE_TYPES;
   recurrenceInterval: number;
   recurrenceEndDate: Date | null;
   note: string | null;
+  customReason: string | null;
   isCompleted: boolean;
 }
 
@@ -119,6 +121,15 @@ export const reminderSchema = z.object({
       return false;
     }
   }, 'Invalid date format'),
+  reminderTime: z
+    .preprocess(
+      (val) => (val === '' ? null : val),
+      z
+        .string()
+        .regex(/^\d{2}:\d{2}$/, 'Time must be in HH:MM format')
+        .nullable()
+    )
+    .default(null),
   remindSchedule: z
     .enum(
       reminderScheduleOptions as [
@@ -149,6 +160,11 @@ export const reminderSchema = z.object({
     }, 'Invalid date format')
     .nullable(),
   note: z.string().max(500, 'Notes cannot be longer than 500 characters.').nullable(),
+  customReason: z
+    .string()
+    .max(200, 'Reason cannot be longer than 200 characters.')
+    .nullable()
+    .default(null),
   isCompleted: z.boolean().default(false)
 });
 

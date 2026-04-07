@@ -19,10 +19,13 @@
   import Gauge from '@lucide/svelte/icons/gauge';
   import ToggleLeft from '@lucide/svelte/icons/toggle-left';
   import Bell from '@lucide/svelte/icons/bell';
+  import Tag from '@lucide/svelte/icons/tag';
   import NotificationProvidersSettings from '$feature/settings/NotificationProvidersSettings.svelte';
   import SettingsFeaturesTab from '$feature/settings/SettingsFeaturesTab.svelte';
   import SettingsPersonalizationTab from '$feature/settings/SettingsPersonalizationTab.svelte';
   import SettingsUnitsTab from '$feature/settings/SettingsUnitsTab.svelte';
+  import SettingsLabelsTab from '$feature/settings/SettingsLabelsTab.svelte';
+  import * as Form from '$ui/form/index.js';
   import Button from '$lib/components/ui/button/button.svelte';
   import { goto } from '$app/navigation';
   import SettingFormSection from '$lib/components/feature/settings/SettingFormSection.svelte';
@@ -129,6 +132,11 @@
       id: 'notifications',
       label: 'Notifications',
       icon: Bell
+    },
+    {
+      id: 'labels',
+      label: 'Custom Labels',
+      icon: Tag
     }
   ];
 
@@ -301,11 +309,80 @@
                 disabled={processing}
               />
 
+              <SettingFormSection
+                title="Severity Colors"
+                subtitle="Color codes used in Discord notifications for each channel type"
+              >
+                <div class="grid gap-4 lg:grid-cols-3">
+                  <Form.Field {form} name="colorReminder" class="w-full">
+                    <Form.Control>
+                      {#snippet children({ props })}
+                        <div class="flex flex-col gap-1.5">
+                          <span class="text-sm font-medium">Reminder</span>
+                          <input
+                            {...props}
+                            type="color"
+                            bind:value={$formData.colorReminder}
+                            class="h-9 w-full cursor-pointer rounded-md border px-1 py-0.5"
+                          />
+                        </div>
+                      {/snippet}
+                    </Form.Control>
+                  </Form.Field>
+
+                  <Form.Field {form} name="colorAlert" class="w-full">
+                    <Form.Control>
+                      {#snippet children({ props })}
+                        <div class="flex flex-col gap-1.5">
+                          <span class="text-sm font-medium">Alert</span>
+                          <input
+                            {...props}
+                            type="color"
+                            bind:value={$formData.colorAlert}
+                            class="h-9 w-full cursor-pointer rounded-md border px-1 py-0.5"
+                          />
+                        </div>
+                      {/snippet}
+                    </Form.Control>
+                  </Form.Field>
+
+                  <Form.Field {form} name="colorInformation" class="w-full">
+                    <Form.Control>
+                      {#snippet children({ props })}
+                        <div class="flex flex-col gap-1.5">
+                          <span class="text-sm font-medium">Information</span>
+                          <input
+                            {...props}
+                            type="color"
+                            bind:value={$formData.colorInformation}
+                            class="h-9 w-full cursor-pointer rounded-md border px-1 py-0.5"
+                          />
+                        </div>
+                      {/snippet}
+                    </Form.Control>
+                  </Form.Field>
+                </div>
+              </SettingFormSection>
+
               <div class="flex justify-end">
                 <SubmitButton {processing} class="w-full sm:w-auto">
                   {m.settings_update_button()}
                 </SubmitButton>
               </div>
+            </fieldset>
+          </SettingsSection>
+        {/if}
+
+        <!-- Labels Section -->
+        {#if activeSection === 'labels'}
+          <SettingsSection
+            title="Custom Labels"
+            description="Override default UI labels with names that make sense for your fleet."
+          >
+            <fieldset class="space-y-6" disabled={processing}>
+              <SettingFormSection title="Tab Labels" subtitle="Rename section tabs across the app">
+                <SettingsLabelsTab {form} {formData} {processing} />
+              </SettingFormSection>
             </fieldset>
           </SettingsSection>
         {/if}

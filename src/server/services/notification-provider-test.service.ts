@@ -4,10 +4,12 @@ import type {
   NotificationProviderWithParsedConfig,
   WebhookProviderConfig
 } from '$lib/domain/notification-provider';
+import { serverEnv } from '$lib/config/env.server';
 import { AppError, Status } from '$server/exceptions/AppError';
 
 import { buildWebhookHeaders } from './notification-provider-http.helper';
 import { testEmailProvider } from './emailNotificationService';
+import { testDiscordNotification } from './discordNotificationService';
 
 export type NotificationProviderTestResult = {
   success: boolean;
@@ -103,6 +105,8 @@ export async function testNotificationProvider(
       return testWebhookProvider(provider.config as WebhookProviderConfig, testMessage);
     case 'gotify':
       return testGotifyProvider(provider.config as GotifyProviderConfig, testMessage);
+    case 'discord':
+      return testDiscordNotification(serverEnv.DISCORD_WEBHOOK_URL, testMessage);
     default:
       throw new AppError('Provider type is not supported for testing', Status.BAD_REQUEST);
   }

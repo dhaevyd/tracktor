@@ -152,6 +152,10 @@
       return { type: 'gotify' as const, ...(gotifyConfig as GotifyProviderConfig) };
     }
 
+    if (providerType === 'discord') {
+      return { type: 'discord' as const };
+    }
+
     return null;
   }
 

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { NOTIFICATION_CHANNELS } from './notification';
 
-export const notificationProviderTypeSchema = z.enum(['email', 'webhook', 'gotify']);
+export const notificationProviderTypeSchema = z.enum(['email', 'webhook', 'gotify', 'discord']);
 
 const notificationChannelOptions = Object.keys(
   NOTIFICATION_CHANNELS
@@ -65,6 +65,11 @@ export const gotifyProviderConfigSchema = z.object({
 
 export type GotifyProviderConfig = z.infer<typeof gotifyProviderConfigSchema>;
 
+// Discord Provider Configuration (URL comes from env, not stored in DB)
+export const discordProviderConfigSchema = z.object({});
+
+export type DiscordProviderConfig = z.infer<typeof discordProviderConfigSchema>;
+
 // Discriminated union for all provider configs
 export const notificationProviderConfigSchema = z.discriminatedUnion('type', [
   z.object({
@@ -78,6 +83,10 @@ export const notificationProviderConfigSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('gotify'),
     ...gotifyProviderConfigSchema.shape
+  }),
+  z.object({
+    type: z.literal('discord'),
+    ...discordProviderConfigSchema.shape
   })
 ]);
 
@@ -137,6 +146,10 @@ const notificationProviderConfigUpdateSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('gotify'),
     ...gotifyProviderConfigUpdateSchema.shape
+  }),
+  z.object({
+    type: z.literal('discord'),
+    ...discordProviderConfigSchema.shape
   })
 ]);
 

@@ -9,7 +9,8 @@
     REMINDER_RECURRENCE_TYPES,
     reminderSchema,
     getReminderScheduleLabel,
-    getRecurrenceTypeLabel
+    getRecurrenceTypeLabel,
+    getReminderTypeLabel
   } from '$lib/domain/reminder';
   import { superForm, defaults } from 'sveltekit-superforms';
   import Repeat from '@lucide/svelte/icons/repeat';
@@ -18,6 +19,7 @@
   import SubmitButton from '$appui/SubmitButton.svelte';
   import type { Reminder } from '$lib/domain';
   import Calendar1 from '@lucide/svelte/icons/calendar-1';
+  import Clock from '@lucide/svelte/icons/clock';
   import BellRing from '@lucide/svelte/icons/bell-ring';
   import Layers from '@lucide/svelte/icons/layers';
   import * as Select from '$ui/select/index.js';
@@ -27,6 +29,20 @@
   import { saveReminder } from '$lib/services/reminder.service';
   import { toast } from 'svelte-sonner';
   import * as m from '$lib/paraglide/messages';
+  import { configStore } from '$stores/config.svelte';
+
+  function getReminderDisplayLabel(type: string): string {
+    switch (type) {
+      case 'maintenance':
+        return configStore.configs.labelMaintenanceTab || getReminderTypeLabel(type, m);
+      case 'insurance':
+        return configStore.configs.labelInsuranceTab || getReminderTypeLabel(type, m);
+      case 'pollution':
+        return configStore.configs.labelPollutionTab || getReminderTypeLabel(type, m);
+      default:
+        return getReminderTypeLabel(type, m);
+    }
+  }
 
   let { data }: { data?: Partial<Reminder> } = $props();
   let processing = $state(false);
@@ -41,6 +57,7 @@
         saveReminder({
           ...f.data,
           dueDate: parseDate(f.data.dueDate),
+          reminderTime: f.data.reminderTime || null,
           recurrenceEndDate: f.data.recurrenceEndDate ? parseDate(f.data.recurrenceEndDate) : null
         }).then((res) => {
           if (res.status === 'OK') {
@@ -77,6 +94,7 @@
         vehicleId: resolveVehicleId(),
         type: data.type || fd.type,
         dueDate: data.dueDate ? formatDate(data.dueDate) : fd.dueDate,
+        reminderTime: data.reminderTime ?? fd.reminderTime,
         remindSchedule: data.remindSchedule || fd.remindSchedule,
         recurrenceType: data.recurrenceType || fd.recurrenceType,
         recurrenceInterval: data.recurrenceInterval || fd.recurrenceInterval,
@@ -84,6 +102,7 @@
           ? formatDate(data.recurrenceEndDate)
           : fd.recurrenceEndDate,
         note: data.note ?? fd.note,
+        customReason: data.customReason ?? fd.customReason,
         isCompleted: data.isCompleted ?? fd.isCompleted
       }));
     }
@@ -104,6 +123,18 @@
       <Form.FieldErrors />
     </Form.Field>
 
+    <Form.Field {form} name="reminderTime" class="w-full">
+      <Form.Control>
+        {#snippet children({ props })}
+          <FormLabel description="Leave blank to receive the reminder at any time">
+            Reminder Time
+          </FormLabel>
+          <Input {...props} bind:value={$formData.reminderTime} type="time" icon={Clock} />
+        {/snippet}
+      </Form.Control>
+      <Form.FieldErrors />
+    </Form.Field>
+
     <Form.Field {form} name="type" class="w-full">
       <Form.Control>
         {#snippet children({ props })}
@@ -115,14 +146,13 @@
               <div class="flex items-center gap-2">
                 <Layers class="h-4 w-4" />
                 <span
-                  >{REMINDER_TYPES[$formData.type as keyof typeof REMINDER_TYPES] ||
-                    'Select type'}</span
+                  >{$formData.type ? getReminderDisplayLabel($formData.type) : 'Select type'}</span
                 >
               </div>
             </Select.Trigger>
             <Select.Content>
-              {#each Object.entries(REMINDER_TYPES) as [value, label]}
-                <Select.Item {value}>{label}</Select.Item>
+              {#each Object.keys(REMINDER_TYPES) as value}
+                <Select.Item {value}>{getReminderDisplayLabel(value)}</Select.Item>
               {/each}
             </Select.Content>
           </Select.Root>
@@ -242,6 +272,18 @@
       </Form.Control>
       <Form.FieldErrors />
     </Form.Field>
+
+    {#if $formData.type === 'custom'}
+      <Form.Field {form} name="customReason" class="w-full">
+        <Form.Control>
+          {#snippet children({ props })}
+            <FormLabel description="Describe what this reminder is for">Reason</FormLabel>
+            <Input {...props} bind:value={$formData.customReason} />
+          {/snippet}
+        </Form.Control>
+        <Form.FieldErrors />
+      </Form.Field>
+    {/if}
 
     <Form.Field {form} name="isCompleted">
       <Form.Control>

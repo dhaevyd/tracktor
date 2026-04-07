@@ -18,44 +18,44 @@
     featureKey?: keyof typeof configStore.configs;
   };
 
-  const sections: Section[] = [
+  const sections = $derived<Section[]>([
     {
-      label: m.nav_overview(),
+      label: configStore.configs.labelOverviewTab || m.nav_overview(),
       href: '/dashboard/overview',
       icon: SquareKanban,
       featureKey: 'featureOverview'
     },
     {
-      label: m.nav_fuel_logs(),
+      label: configStore.configs.labelFuelTab || m.nav_fuel_logs(),
       href: '/dashboard/fuel',
       icon: Fuel,
       featureKey: 'featureFuelLog'
     },
     {
-      label: m.nav_maintenance(),
+      label: configStore.configs.labelMaintenanceTab || m.nav_maintenance(),
       href: '/dashboard/maintenance',
       icon: Wrench,
       featureKey: 'featureMaintenance'
     },
     {
-      label: m.nav_insurance(),
+      label: configStore.configs.labelInsuranceTab || m.nav_insurance(),
       href: '/dashboard/insurance',
       icon: Shield,
       featureKey: 'featureInsurance'
     },
     {
-      label: m.nav_pollution(),
+      label: configStore.configs.labelPollutionTab || m.nav_pollution(),
       href: '/dashboard/pollution',
       icon: BadgeInfo,
       featureKey: 'featurePucc'
     },
     {
-      label: m.nav_reminders(),
+      label: configStore.configs.labelReminderTab || m.nav_reminders(),
       href: '/dashboard/reminders',
       icon: Bell,
       featureKey: 'featureReminders'
     }
-  ];
+  ]);
 
   let visibleSections = $derived(
     sections.filter((section) => {

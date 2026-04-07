@@ -2,6 +2,7 @@
   import Bell from '@lucide/svelte/icons/bell';
   import Loader2 from '@lucide/svelte/icons/loader-2';
   import Mail from '@lucide/svelte/icons/mail';
+  import MessageSquare from '@lucide/svelte/icons/message-square';
   import Webhook from '@lucide/svelte/icons/webhook';
   import { toast } from 'svelte-sonner';
 
@@ -47,6 +48,8 @@
         return Webhook;
       case 'gotify':
         return Bell;
+      case 'discord':
+        return MessageSquare;
       default:
         return Mail;
     }

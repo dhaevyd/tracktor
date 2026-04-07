@@ -52,8 +52,16 @@ export function isReminderAvailable(dueDate: Date, remindSchedule: string): bool
   return notificationDate <= today;
 }
 
-export function formatReminderMessage(type: string, note: string | null, dueDate: Date): string {
-  const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+export function formatReminderMessage(
+  type: string,
+  note: string | null,
+  dueDate: Date,
+  customReason?: string | null
+): string {
+  const typeLabel =
+    type === 'custom' && customReason
+      ? `Custom: "${customReason}"`
+      : type.charAt(0).toUpperCase() + type.slice(1);
   const dueDateFormatted = dueDate.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
